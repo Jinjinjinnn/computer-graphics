@@ -21,19 +21,13 @@ const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 let shader;
 let lampShader;
-let textOverlay; 
 let textOverlay2;
 let textOverlay3;
-let textOverlay4;
-let textOverlay5;
-let textOverlay6;
 let isInitialized = false;
 
 let viewMatrix = mat4.create();
 let projMatrix = mat4.create();
 let modelMatrix = mat4.create();
-let savedModelMatrix = mat4.create();
-let savedViewMatrix = mat4.create();
 let lampModelMatrix = mat4.create();
 let arcBallMode = 'CAMERA';     // 'CAMERA' or 'MODEL'
 let shadingMode = 'FLAT';       // 'FLAT' or 'SMOOTH'
@@ -46,10 +40,6 @@ const texture = loadTexture(gl, true, '../images/textures/sunrise.jpg');
 const cameraPos = vec3.fromValues(0, 0, -3);
 const lightSize = vec3.fromValues(0.1, 0.1, 0.1);
 const lightPos = vec3.fromValues(1.0, 0.5, 0.5);
-const lightColor = vec3.fromValues(1.0, 1.0, 1.0);
-const objectColor = vec3.fromValues(1.0, 0.5, 0.31);
-const ambientStrength = 0.2;
-const specularStrength = 0.5;
 const shininess = 32.0;
 
 
@@ -83,26 +73,26 @@ function setupKeyboardEvents() {
             else {
                 arcBallMode = 'CAMERA';
             }
-            updateText(textOverlay, "arcball mode: " + arcBallMode);
+            updateText(textOverlay2, "arcball mode: " + arcBallMode);
         }
         else if (event.key == 'r') {
             arcball.reset();
             modelMatrix = mat4.create(); 
             arcBallMode = 'CAMERA';
-            updateText(textOverlay, "arcball mode: " + arcBallMode);
+            updateText(textOverlay2, "arcball mode: " + arcBallMode);
         }
         else if (event.key == 's') {
             cylinder.copyVertexNormalsToNormals();
             cylinder.updateNormals();
             shadingMode = 'SMOOTH';
-            updateText(textOverlay2, "shading mode: " + shadingMode);
+            updateText(textOverlay3, "shading mode: " + shadingMode);
             render();
         }
         else if (event.key == 'f') {
             cylinder.copyFaceNormalsToNormals();
             cylinder.updateNormals();
             shadingMode = 'FLAT';
-            updateText(textOverlay2, "shading mode: " + shadingMode);
+            updateText(textOverlay3, "shading mode: " + shadingMode);
             render();
         }
     });
@@ -118,7 +108,7 @@ function initWebGL() {
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.7, 0.8, 0.9, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
 
     // cylinder의 바깥쪽 face만 rendering 되도록 함
     //gl.enable(gl.CULL_FACE);
@@ -130,18 +120,17 @@ function initWebGL() {
 async function initShader() {
     const vertexShaderSource = await readShaderFile('shVert.glsl');
     const fragmentShaderSource = await readShaderFile('shFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 async function initLampShader() {
     const vertexShaderSource = await readShaderFile('shLampVert.glsl');
     const fragmentShaderSource = await readShaderFile('shLampFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    lampShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 function render() {
     // clear canvas
-    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
@@ -191,8 +180,8 @@ async function main() {
         );
 
         // creating shaders
-        shader = await initShader();
-        lampShader = await initLampShader();
+        await initShader();
+        await initLampShader();
 
         shader.use();
         shader.setMat4("u_projection", projMatrix);
@@ -207,17 +196,17 @@ async function main() {
 
         lampShader.use();
         lampShader.setMat4("u_projection", projMatrix);
-        const lampModelMatrix = mat4.create();
         mat4.translate(lampModelMatrix, lampModelMatrix, lightPos);
         mat4.scale(lampModelMatrix, lampModelMatrix, lightSize);
         lampShader.setMat4('u_model', lampModelMatrix);
 
-        textOverlay = setupText(canvas, "arcball mode: " + arcBallMode);
-        textOverlay2 = setupText(canvas, "shading mode: " + shadingMode, 2);
-        textOverlay3 = setupText(canvas, "press 'a' to change arcball mode", 3);
-        textOverlay4 = setupText(canvas, "press 'r' to reset arcball", 4);
-        textOverlay5 = setupText(canvas, "press 's' to switch to smooth shading", 5);
-        textOverlay6 = setupText(canvas, "press 'f' to switch to flat shading", 6);
+        setupText(canvas, "Diffuse Map", 1); 
+        textOverlay2 = setupText(canvas, "arcball mode: " + arcBallMode, 2);
+        textOverlay3 = setupText(canvas, "shading mode: " + shadingMode, 3);
+        setupText(canvas, "press 'a' to change arcball mode", 4);
+        setupText(canvas, "press 'r' to reset arcball", 5);
+        setupText(canvas, "press 's' to switch to smooth shading", 6);
+        setupText(canvas, "press 'f' to switch to flat shading", 7);
         setupKeyboardEvents();
 
         // bind the texture to the shader

@@ -16,25 +16,21 @@ const gl = canvas.getContext('webgl2');
 let shader;
 let lampShader;
 let isInitialized = false;
-let startTime;
-let lastFrameTime;
 
 let viewMatrix = mat4.create();
 let projMatrix = mat4.create();
 let modelMatrix = mat4.create();
+let lampModelMatrix = mat4.create();
 
 const cylinder = new Cylinder(gl, 32);
 let zPos = -3.0;
-let zSpeed = -1.0; 
 
 const lamp = new Cube(gl);
-//const axes = new Axes(gl, 1.5); // create an Axes object with the length of axis 1.5
 const texture = loadTexture(gl, true, '../images/textures/sunrise.jpg');
 
 const cameraPos = vec3.fromValues(0, 0, zPos);
 const lightSize = vec3.fromValues(0.1, 0.1, 0.1);
 const lightPos = vec3.fromValues(0.7, 0.3, 1.0);
-const lightColor = vec3.fromValues(1.0, 1.0, 1.0);
 const shininess = 32.0;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -64,7 +60,7 @@ function initWebGL() {
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.7, 0.8, 0.9, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     
     return true;
 }
@@ -72,27 +68,22 @@ function initWebGL() {
 async function initShader() {
     const vertexShaderSource = await readShaderFile('shVert.glsl');
     const fragmentShaderSource = await readShaderFile('shFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 async function initLampShader() {
     const vertexShaderSource = await readShaderFile('shLampVert.glsl');
     const fragmentShaderSource = await readShaderFile('shLampFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    lampShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 function render() {
     const currentTime = Date.now();
-    const elapsedTime = (currentTime - startTime) / 1000.0;
-    const deltaTime = (currentTime - lastFrameTime) / 1000.0;
-    lastFrameTime = currentTime;
 
-    //mat4.rotateX(modelMatrix, mat4.create(), glMatrix.toRadian(elapsedTime * 100));
     zPos = 2.5 * Math.sin(currentTime * 0.001) - 3.0;
     mat4.translate(modelMatrix, mat4.create(), vec3.fromValues(0, 0, zPos));
 
     // clear canvas
-    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
@@ -107,9 +98,6 @@ function render() {
     lampShader.use();
     lampShader.setMat4('u_view', viewMatrix);
     lamp.draw(lampShader);
-
-    // drawing the axes (using the axes's shader: see util.js)
-    //axes.draw(viewMatrix, projMatrix);
 
     // call the render function the next time for animation
     requestAnimationFrame(render);
@@ -137,8 +125,8 @@ async function main() {
         cylinder.updateNormals();
 
         // creating shaders
-        shader = await initShader();
-        lampShader = await initLampShader();
+        await initShader();
+        await initLampShader();
 
         shader.use();
         shader.setMat4("u_projection", projMatrix);
@@ -156,7 +144,6 @@ async function main() {
 
         lampShader.use();
         lampShader.setMat4("u_projection", projMatrix);
-        const lampModelMatrix = mat4.create();
         mat4.translate(lampModelMatrix, lampModelMatrix, lightPos);
         mat4.scale(lampModelMatrix, lampModelMatrix, lightSize);
         lampShader.setMat4('u_model', lampModelMatrix);
@@ -166,8 +153,6 @@ async function main() {
         // bind the texture to the shader
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-
-        startTime = lastFrameTime = Date.now();
 
         // call the render function the first time for animation
         requestAnimationFrame(render);

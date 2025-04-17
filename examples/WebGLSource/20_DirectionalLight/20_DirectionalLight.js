@@ -104,7 +104,7 @@ function initWebGL() {
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.7, 0.8, 0.9, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     
     return true;
 }
@@ -112,12 +112,11 @@ function initWebGL() {
 async function initShader() {
     const vertexShaderSource = await readShaderFile('shVert.glsl');
     const fragmentShaderSource = await readShaderFile('shFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 function render() {
     // clear canvas
-    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
@@ -162,7 +161,7 @@ async function main() {
         );
 
         // creating shaders
-        shader = await initShader();
+        await initShader();
 
         shader.use();
         shader.setMat4("u_projection", projMatrix);

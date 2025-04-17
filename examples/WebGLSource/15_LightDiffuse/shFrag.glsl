@@ -2,8 +2,8 @@
 
 precision highp float;
 
-in vec3 fragPos;  
-in vec3 normal;  
+in vec3 fragPos;        // modelMatrix(M) * localCoords from vertex shader
+in vec3 normal;         // (M^(-1))^T * localNormal from vertex shader 
 out vec4 FragColor;
 
 struct Material {
@@ -18,7 +18,6 @@ struct Light {
 
 uniform Material material;
 uniform Light light;
-uniform vec3 u_viewPos;
 
 void main() {
     // ambient

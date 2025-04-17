@@ -21,8 +21,6 @@ const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 let shader;
 let lampShader;
-let textOverlay; 
-let textOverlay2;
 let isInitialized = false;
 
 let viewMatrix = mat4.create();
@@ -102,7 +100,7 @@ function initWebGL() {
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.1, 0.2, 0.3, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     
     return true;
 }
@@ -110,13 +108,13 @@ function initWebGL() {
 async function initShader() {
     const vertexShaderSource = await readShaderFile('shVert.glsl');
     const fragmentShaderSource = await readShaderFile('shFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 async function initLampShader() {
     const vertexShaderSource = await readShaderFile('shLampVert.glsl');
     const fragmentShaderSource = await readShaderFile('shLampFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    lampShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 function render() {
@@ -188,8 +186,8 @@ async function main() {
         );
 
         // creating shaders
-        shader = await initShader();
-        lampShader = await initLampShader();
+        await initShader();
+        await initLampShader();
 
         // Pass the uniform variables to the shader
         shader.use();
@@ -259,8 +257,9 @@ async function main() {
         cylinder.copyVertexNormalsToNormals();
         cylinder.updateNormals();
 
-        textOverlay = setupText(canvas, "LIGHTING WITH MULTIPLE LIGHTS");
-        textOverlay2 = setupText(canvas, "press 'r' to reset arcball", 2);
+        setupText(canvas, "LIGHTING WITH MULTIPLE LIGHTS");
+        setupText(canvas, "1 directional light, 3 point lights, 1 spotlight", 2);
+        setupText(canvas, "press 'r' to reset arcball", 3);
 
         setupKeyboardEvents();
 

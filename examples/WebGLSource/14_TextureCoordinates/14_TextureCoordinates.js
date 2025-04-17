@@ -3,10 +3,12 @@
 
 - Viewing a 2D unit rectangle at origin with perspective projection
 - Applying image texture (../images/textures/balloon1.jpg) to the rectangle
+- Press the space bar to change the texture coordinates states of the rectangle
+- The state is changed circularly: 0, 1, 2, 3, 0, 1, 2, 3, ...
 -----------------------------------------------------------------------------------*/
 import { resizeAspectRatio, setupText, updateText } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
-import { Rectangle } from '../util/rectangle.js';
+import { Rectangle } from '../util/rectangle.js';  // see ../util/rectangle.js
 import { loadTexture } from '../util/texture.js';
 
 const canvas = document.getElementById('glCanvas');
@@ -45,11 +47,11 @@ function initWebGL() {
         return false;
     }
 
-    canvas.width = 500;
-    canvas.height = 500;
+    canvas.width = 700;
+    canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.7, 0.8, 0.9, 1.0);
+    gl.clearColor(0.1, 0.2, 0.3, 1.0);
     
     return true;
 }
@@ -68,24 +70,55 @@ document.addEventListener('keydown', (e) => {
         
         switch (state) {
             case 0:  // 기본 텍스처 매핑
+
+            //  (0,1) v1------v0 (1,1)
+            //        |        |
+            //        |        |
+            //        |        |
+            //  (0,0) v2------v3 (1,0)
+
                 rectangle.texCoords[0] = 1.0; rectangle.texCoords[1] = 1.0;
                 rectangle.texCoords[2] = 0.0; rectangle.texCoords[3] = 1.0;
                 rectangle.texCoords[4] = 0.0; rectangle.texCoords[5] = 0.0;
                 rectangle.texCoords[6] = 1.0; rectangle.texCoords[7] = 0.0;
                 break;
-            case 1:  // 1/4 크기
+
+            case 1:  // 1/4 크기 x = [0, 0.5], y = [0, 0.5]: x, y는 모두 1/2로 줄어듦
+
+            //  (0, 0.5) v1------v0 (0.5, 0.5)
+            //           |        |
+            //           |        |
+            //           |        |
+            //  (0, 0)   v2------v3 (0.5, 0)
+
                 rectangle.texCoords[0] = 0.5; rectangle.texCoords[1] = 0.5;
                 rectangle.texCoords[2] = 0.0; rectangle.texCoords[3] = 0.5;
                 rectangle.texCoords[4] = 0.0; rectangle.texCoords[5] = 0.0;
                 rectangle.texCoords[6] = 0.5; rectangle.texCoords[7] = 0.0;
                 break;
-            case 2:  // 늘어난 텍스처
+
+            case 2:  // 늘어난 텍스처 x=[-1,2], y=[0,1]: y는 정상, x는 3배로 늘어남
+
+            //   (-1,1) v1------v0 (2,1)
+            //          |        |
+            //          |        |
+            //          |        |
+            //   (-1,0) v2------v3 (2,0)
+
                 rectangle.texCoords[0] = 2.0; rectangle.texCoords[1] = 1.0;
                 rectangle.texCoords[2] = -1.0; rectangle.texCoords[3] = 1.0;
                 rectangle.texCoords[4] = -1.0; rectangle.texCoords[5] = 0.0;
                 rectangle.texCoords[6] = 2.0; rectangle.texCoords[7] = 0.0;
                 break;
-            case 3:  // 더 늘어난 텍스처
+
+            case 3:  // 더 늘어난 텍스처: x=[-1,2], y=[-1,2]: x,y 모두 3배로 늘어남
+
+            //   (-1,2) v1------v0 (2,2)
+            //          |        |
+            //          |        |
+            //          |        |
+            //  (-1,-1) v2------v3 (2,-1)
+
                 rectangle.texCoords[0] = 2.0; rectangle.texCoords[1] = 2.0;
                 rectangle.texCoords[2] = -1.0; rectangle.texCoords[3] = 2.0;
                 rectangle.texCoords[4] = -1.0; rectangle.texCoords[5] = -1.0;
@@ -101,7 +134,6 @@ document.addEventListener('keydown', (e) => {
 function render() {
 
     // clear canvas
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
@@ -124,7 +156,7 @@ async function main() {
         
         await initShader();
 
-        // View transformation matrix (camera at (0,0,-2), invariant in the program)
+        // View transformation matrix (invariant in the program)
         mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(-0.5, -0.5, -2));
 
         // Projection transformation matrix (invariant in the program)
@@ -133,7 +165,7 @@ async function main() {
             glMatrix.toRadian(60),  // field of view (fov, degree)
             canvas.width / canvas.height, // aspect ratio
             0.1, // near
-            100.0 // far
+            1000.0 // far
         );
 
         gl.activeTexture(gl.TEXTURE0);

@@ -15,10 +15,7 @@ const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 let shader;
 let lampShader;
-let textOverlay; 
 let textOverlay2;
-let textOverlay3;
-let textOverlay4;
 
 let isInitialized = false;
 
@@ -72,7 +69,7 @@ function setupKeyboardEvents() {
             arcball.reset();
             modelMatrix = mat4.create(); 
             arcBallMode = 'CAMERA';
-            updateText(textOverlay, "arcball mode: " + arcBallMode);
+            updateText(textOverlay2, "arcball mode: " + arcBallMode);
         }
     });
 }
@@ -87,7 +84,7 @@ function initWebGL() {
     canvas.height = 700;
     resizeAspectRatio(gl, canvas);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.7, 0.8, 0.9, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     
     return true;
 }
@@ -95,18 +92,17 @@ function initWebGL() {
 async function initShader() {
     const vertexShaderSource = await readShaderFile('shVert.glsl');
     const fragmentShaderSource = await readShaderFile('shFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 async function initLampShader() {
     const vertexShaderSource = await readShaderFile('shLampVert.glsl');
     const fragmentShaderSource = await readShaderFile('shLampFrag.glsl');
-    return new Shader(gl, vertexShaderSource, fragmentShaderSource);
+    lampShader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
 }
 
 function render() {
     // clear canvas
-    gl.clearColor(0.1, 0.1, 0.1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
@@ -122,7 +118,6 @@ function render() {
     shader.use();  // using the cube's shader
     shader.setMat4('u_model', modelMatrix);
     shader.setMat4('u_view', viewMatrix);
-    shader.setVec3('u_viewPos', cameraPos);
     cube.draw(shader);
 
     // drawing the lamp
@@ -157,19 +152,19 @@ async function main() {
         );
 
         // creating shaders
-        shader = await initShader();
-        lampShader = await initLampShader();
+        await initShader();
+        await initLampShader();
 
         shader.use();
         shader.setMat4("u_projection", projMatrix);
 
+        // for cube's fragment shader
         shader.setVec3("material.diffuse", vec3.fromValues(1.0, 0.5, 0.31));
-
         shader.setVec3("light.position", lightPos);
         shader.setVec3("light.ambient", vec3.fromValues(0.2, 0.2, 0.2));
         shader.setVec3("light.diffuse", vec3.fromValues(0.7, 0.7, 0.7));
-        shader.setVec3("u_viewPos", cameraPos);
 
+        // for the lamp
         lampShader.use();
         lampShader.setMat4("u_projection", projMatrix);
         mat4.identity(lampModelMatrix);
@@ -177,10 +172,10 @@ async function main() {
         mat4.scale(lampModelMatrix, lampModelMatrix, lightSize);
         lampShader.setMat4('u_model', lampModelMatrix);
 
-        textOverlay = setupText(canvas, "Diffuse Reflection Example", 1);
+        setupText(canvas, "Diffuse Reflection Example", 1);
         textOverlay2 = setupText(canvas, "arcball mode: " + arcBallMode, 2);
-        textOverlay3 = setupText(canvas, "press 'a' to change arcball mode", 3);
-        textOverlay4 = setupText(canvas, "press 'r' to reset arcball", 4);
+        setupText(canvas, "press 'a' to change arcball mode", 3);
+        setupText(canvas, "press 'r' to reset arcball", 4);
         setupKeyboardEvents();
 
         // call the render function the first time for animation

@@ -99,6 +99,7 @@ function render() {
     }
     else { // arcBallMode == 'MODEL'
         modelMatrix = arcball.getModelRotMatrix();
+        // model 모드이더라도 zoom 기능이 있으므로 viewMatrix도 변경사항을 받아옴
         viewMatrix = arcball.getViewCamDistanceMatrix();
     }
 

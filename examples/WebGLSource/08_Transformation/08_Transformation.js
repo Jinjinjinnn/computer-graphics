@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         isInitialized = true;
-        requestAnimationFrame(animate);
+        requestAnimationFrame(animate); //  "다음 렌더 프레임이 준비되면 animate()를 호출해줘" 
     }).catch(error => {
         console.error('프로그램 실행 중 오류 발생:', error);
     });

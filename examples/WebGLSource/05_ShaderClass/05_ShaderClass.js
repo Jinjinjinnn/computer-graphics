@@ -103,7 +103,7 @@ async function main() {
         return true;
     } catch (error) {
         console.error('Failed to initialize program:', error);
-        alert('프로그램 초기화에 실패했습니다.');
+        alert('프로그램 초기화에 실패했습니다.'); // 팝업창
         return false;
     }
 }
